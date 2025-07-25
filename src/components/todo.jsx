@@ -2,42 +2,70 @@ import { useState } from "react";
 
 export default function Todo() {
   const [getValue, setGetValue] = useState("");
-  const [activeValue, setActiveValue] = useState("");
   const [allValue, setAllValue] = useState([]);
-  const [check, setCheck] = useState(false)
+  const [filterType, setFilterType] = useState("all");
+  const [clear, setClear] = useState("");
 
   function handleSubmit() {
     if (!getValue) return;
-    // setDisplayValue(getValue);
-    setGetValue("");
-    const newArr = [...allValue, getValue];
-    
+    const newTask = { text: getValue, done: false };
+    const newArr = [...allValue, newTask];
     setAllValue(newArr);
-  }
-  function deleteValue(index){
-    const copy = [...allValue]
-    copy.splice(index, 1)
-    setAllValue(copy)
+    setGetValue("");
   }
 
-  function activeHandle(){
-     const newTask = {text:getValue, done: false}
-     setActiveValue([...allValue, newTask])
-    // setActiveValue("")
-  }
   function toggleDone(index) {
-    setAllValue(
-      allValue.map((task, i) =>
-        i === index ? { ...task, done: !task.done } : task
-      )
-    );
+    const copy = [...allValue];
+    copy[index].done = !copy[index].done;
+    setAllValue(copy);
   }
+
+  function deleteValue(index) {
+    const copy = [...allValue];
+    copy.splice(index, 1);
+    setAllValue(copy);
+  }
+
+  const filteredTasks =
+    filterType === "active"
+      ? allValue.filter((task) => !task.done)
+      : filterType === "completed"
+      ? allValue.filter((task) => task.done)
+      : allValue;
+
+  function handleLeft() {
+    if (filterType === "active")
+      return allValue.filter((task) => !task.done).length;
+    else if (filterType === "completed")
+      return allValue.filter((task) => task.done).length;
+    else return allValue.length;
+  }
+
+   function clearHandle() {
+     if (filterType === "active") {
+       // Remove active tasks (done: false)
+       setAllValue(allValue.filter((task) => task.done));
+     } else if (filterType === "completed") {
+       // Remove completed tasks (done: true)
+       setAllValue(allValue.filter((task) => !task.done));
+     } else {
+       // filterType is "all" – remove everything
+       setAllValue([]);
+     }
+   }
+  function handleTime(){
+    const option = {weekday:"long", month:"short", day:"numeric"}
+    let today = new Date();
+   return today.toLocaleDateString("en-US", option);
+  }
+  
+  
   return (
     <div>
       <div>
         <div>
           <p>My Task</p>
-          <p>Day</p>
+          <p>{handleTime()}</p>
         </div>
         <div>
           <input
@@ -47,37 +75,30 @@ export default function Todo() {
           <button onClick={handleSubmit}>button</button>
         </div>
         <div>
-            <p>All</p>
-            <p>Active</p>
+          <button onClick={() => setFilterType("all")}>All</button>
+          <button onClick={() => setFilterType("active")}>Active</button>
+          <button onClick={() => setFilterType("completed")}>Completed</button>
         </div>
         <div>
-          {allValue.map((data, index) => {
-            return (
-              <div>
-                <input
-                  type="checkbox"
-                  onChange={(e) => setCheck(e.target.value)}
-                  value={check}
-                />
-                {data}
-                <button onClick={deleteValue}>del</button>
-              </div>
-            );
-          })}
-          {allValue.map((data, index) => (
-            <div>
-              <input onChange={() => toggleDone(index)} />
-              <p>{data.done}</p>
+          {filteredTasks.map((data, index) => (
+            <div key={index}>
+              <input
+                type="checkbox"
+                checked={data.done}
+                onChange={() => toggleDone(index)}
+              />
+              <span
+                style={{ textDecoration: data.done ? "line-through" : "none" }}
+              >
+                {data.text}
+              </span>
               <button onClick={() => deleteValue(index)}>del</button>
             </div>
           ))}
-          <p>All</p>
-          {/* <p>Active</p>
-            <p>Computed</p> */}
-          {/* <p>{displayValue}</p> */}
         </div>
         <div>
-          <p>clear</p>
+          <p>{handleLeft()} left</p>
+          <button onClick={clearHandle}>clear</button>
         </div>
       </div>
     </div>
